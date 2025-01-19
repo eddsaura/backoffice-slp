@@ -1,13 +1,13 @@
-import React from 'react';
-import { Ingredient, IngredientPurchase } from '../types/order';
-import { useIngredients, useCreateIngredient } from '../lib/api';
-import { PlusCircle, Euro } from 'lucide-react';
-import { Input } from './ui/Input';
-import { Select } from './ui/Select';
+import React from "react";
+import { Ingredient, IngredientPurchase } from "../types/order";
+import { useIngredients, useCreateIngredient } from "../lib/api";
+import { PlusCircle, Euro } from "lucide-react";
+import { Input } from "./ui/Input";
+import { Select } from "./ui/Select";
 
 interface IngredientPurchaseFormProps {
   orderId?: string;
-  onSubmit: (purchase: Omit<IngredientPurchase, 'id'>) => void;
+  onSubmit: (purchase: Omit<IngredientPurchase, "id">) => void;
   onCancel: () => void;
 }
 
@@ -20,27 +20,31 @@ export function IngredientPurchaseForm({
   const createIngredient = useCreateIngredient();
   const [showNewIngredient, setShowNewIngredient] = React.useState(false);
   const [newIngredient, setNewIngredient] = React.useState({
-    name: '',
-    unit: '',
+    name: "",
+    unit: "",
   });
-  const [formData, setFormData] = React.useState<Omit<IngredientPurchase, 'id'>>({
-    ingredientId: '',
+  const [formData, setFormData] = React.useState<
+    Omit<IngredientPurchase, "id">
+  >({
+    ingredientId: "",
     orderId,
     quantity: 0,
     price: 0,
     unit_price: 0,
     isUnitPrice: true,
-    supplier: '',
-    purchaseDate: new Date().toISOString().split('T')[0],
+    supplier: "",
+    purchaseDate: new Date().toISOString().split("T")[0],
   });
 
-  const totalPrice = formData.isUnitPrice 
-    ? formData.price * formData.quantity 
+  const totalPrice = formData.isUnitPrice
+    ? formData.price * formData.quantity
     : formData.price;
 
-  const unitPrice = formData.isUnitPrice 
-    ? formData.price 
-    : formData.quantity > 0 ? formData.price / formData.quantity : 0;
+  const unitPrice = formData.isUnitPrice
+    ? formData.price
+    : formData.quantity > 0
+    ? formData.price / formData.quantity
+    : 0;
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -56,9 +60,9 @@ export function IngredientPurchaseForm({
     try {
       await createIngredient.mutateAsync(newIngredient);
       setShowNewIngredient(false);
-      setNewIngredient({ name: '', unit: '' });
+      setNewIngredient({ name: "", unit: "" });
     } catch (error) {
-      console.error('Error creating ingredient:', error);
+      console.error("Error creating ingredient:", error);
     }
   };
 
@@ -67,7 +71,9 @@ export function IngredientPurchaseForm({
       <div className="space-y-4">
         {showNewIngredient ? (
           <div className="space-y-4">
-            <h3 className="text-lg font-medium text-gray-900">New Ingredient</h3>
+            <h3 className="text-lg font-medium text-gray-900">
+              New Ingredient
+            </h3>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
                 <Input
@@ -147,14 +153,16 @@ export function IngredientPurchaseForm({
             <div className="flex justify-end">
               <button
                 type="button"
-                onClick={() => setFormData(prev => ({
-                  ...prev,
-                  isUnitPrice: !prev.isUnitPrice,
-                  price: prev.isUnitPrice ? totalPrice : unitPrice,
-                }))}
+                onClick={() =>
+                  setFormData((prev) => ({
+                    ...prev,
+                    isUnitPrice: !prev.isUnitPrice,
+                    price: prev.isUnitPrice ? totalPrice : unitPrice,
+                  }))
+                }
                 className="text-sm text-blue-600 hover:text-blue-700"
               >
-                Switch to {formData.isUnitPrice ? 'total' : 'unit'} price
+                Switch to {formData.isUnitPrice ? "total" : "unit"} price
               </button>
             </div>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -168,21 +176,21 @@ export function IngredientPurchaseForm({
                   value={formData.quantity}
                   onChange={(e) => {
                     const newQuantity = Number(e.target.value);
-                    setFormData(prev => ({
+                    setFormData((prev) => ({
                       ...prev,
                       quantity: newQuantity,
-                      price: prev.isUnitPrice 
-                        ? prev.price 
-                        : newQuantity > 0 
-                          ? prev.price 
-                          : 0,
+                      price: prev.isUnitPrice
+                        ? prev.price
+                        : newQuantity > 0
+                        ? prev.price
+                        : 0,
                     }));
                   }}
                 />
               </div>
               <div>
                 <Input
-                  label={formData.isUnitPrice ? 'Unit Price' : 'Total Price'}
+                  label={formData.isUnitPrice ? "Unit Price" : "Total Price"}
                   type="number"
                   min="0"
                   step="0.01"
@@ -191,7 +199,7 @@ export function IngredientPurchaseForm({
                   value={formData.price}
                   onChange={(e) => {
                     const newPrice = Number(e.target.value);
-                    setFormData(prev => ({
+                    setFormData((prev) => ({
                       ...prev,
                       price: newPrice,
                     }));

@@ -1,18 +1,28 @@
-import React from 'react';
-import { PaellaOrder, OrderSummary } from './types/order';
-import { OrderList } from './components/OrderList';
-import { Summary } from './components/Summary';
-import { OrderForm } from './components/OrderForm';
-import { PlusCircle, X, Package } from 'lucide-react';
-import { useOrders, useCreateOrder, useUpdateOrder, useCreateIngredientPurchase, useIngredientPurchases } from './lib/api';
-import { IngredientPurchaseForm } from './components/IngredientPurchaseForm';
-import { IngredientPurchaseList } from './components/IngredientPurchaseList';
-import { Sidebar } from './components/Sidebar';
-import { RecipeCalculator } from './components/RecipeCalculator';
+import React from "react";
+import { PaellaOrder, OrderSummary } from "./types/order";
+import { OrderList } from "./components/OrderList";
+import { Summary } from "./components/Summary";
+import { OrderForm } from "./components/OrderForm";
+import { PlusCircle, X, Package } from "lucide-react";
+import {
+  useOrders,
+  useCreateOrder,
+  useUpdateOrder,
+  useCreateIngredientPurchase,
+  useIngredientPurchases,
+} from "./lib/api";
+import { IngredientPurchaseForm } from "./components/IngredientPurchaseForm";
+import { IngredientPurchaseList } from "./components/IngredientPurchaseList";
+import { Sidebar } from "./components/Sidebar";
+import { RecipeCalculator } from "./components/RecipeCalculator";
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 
-function App() {
+const queryClient = new QueryClient();
+
+function AppContent() {
   const { data: orders = [], isLoading } = useOrders();
-  const { data: purchases = [], isLoading: purchasesLoading } = useIngredientPurchases();
+  const { data: purchases = [], isLoading: purchasesLoading } =
+    useIngredientPurchases();
   const createOrder = useCreateOrder();
   const updateOrder = useUpdateOrder();
   const createIngredientPurchase = useCreateIngredientPurchase();
@@ -23,8 +33,11 @@ function App() {
   const [editingOrder, setEditingOrder] = React.useState<PaellaOrder | null>(
     null
   );
-  const [showIngredientPurchaseForm, setShowIngredientPurchaseForm] = React.useState(false);
-  const [activeTab, setActiveTab] = React.useState<'orders' | 'ingredients' | 'calculator'>('orders');
+  const [showIngredientPurchaseForm, setShowIngredientPurchaseForm] =
+    React.useState(false);
+  const [activeTab, setActiveTab] = React.useState<
+    "orders" | "ingredients" | "calculator"
+  >("orders");
 
   const handleModalOutsideClick = (e: React.MouseEvent) => {
     if (e.target === e.currentTarget) {
@@ -61,21 +74,21 @@ function App() {
     };
   }, [orders]);
 
-  const handleCreateOrder = (orderData: Omit<PaellaOrder, 'id'>) => {
+  const handleCreateOrder = (orderData: Omit<PaellaOrder, "id">) => {
     createOrder.mutate(orderData, {
       onSuccess: () => setShowNewOrderForm(false),
-      onError: (error) => console.error('Error creating order:', error),
+      onError: (error) => console.error("Error creating order:", error),
     });
   };
 
-  const handleUpdateOrder = (orderData: Omit<PaellaOrder, 'id'>) => {
+  const handleUpdateOrder = (orderData: Omit<PaellaOrder, "id">) => {
     if (!editingOrder) return;
 
     updateOrder.mutate(
       { id: editingOrder.id, orderData },
       {
         onSuccess: () => setEditingOrder(null),
-        onError: (error) => console.error('Error updating order:', error),
+        onError: (error) => console.error("Error updating order:", error),
       }
     );
   };
@@ -87,27 +100,27 @@ function App() {
         <div className="flex-1 overflow-auto">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
             <div className="flex justify-end mb-6">
-          <div className="flex space-x-4">
-            <button
-              onClick={() => setShowIngredientPurchaseForm(true)}
-              className="inline-flex items-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-green-600 hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500"
-            >
-              <Package className="w-5 h-5 mr-2" />
-              Add Ingredient Purchase
-            </button>
-            <button
-              onClick={() => setShowNewOrderForm(true)}
-              className="inline-flex items-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
-            >
-              <PlusCircle className="w-5 h-5 mr-2" />
-              Create New Order
-            </button>
-          </div>
-        </div>
-            
-            {activeTab !== 'calculator' && <Summary summary={summary} />}
+              <div className="flex space-x-4">
+                <button
+                  onClick={() => setShowIngredientPurchaseForm(true)}
+                  className="inline-flex items-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-green-600 hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500"
+                >
+                  <Package className="w-5 h-5 mr-2" />
+                  Add Ingredient Purchase
+                </button>
+                <button
+                  onClick={() => setShowNewOrderForm(true)}
+                  className="inline-flex items-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+                >
+                  <PlusCircle className="w-5 h-5 mr-2" />
+                  Create New Order
+                </button>
+              </div>
+            </div>
 
-            {activeTab === 'orders' ? (
+            {activeTab !== "calculator" && <Summary summary={summary} />}
+
+            {activeTab === "orders" ? (
               isLoading ? (
                 <div className="flex justify-center items-center h-64">
                   <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-500"></div>
@@ -115,7 +128,7 @@ function App() {
               ) : (
                 <OrderList orders={orders} onSelectOrder={setSelectedOrder} />
               )
-            ) : activeTab === 'ingredients' ? (
+            ) : activeTab === "ingredients" ? (
               purchasesLoading ? (
                 <div className="flex justify-center items-center h-64">
                   <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-500"></div>
@@ -123,7 +136,7 @@ function App() {
               ) : (
                 <IngredientPurchaseList purchases={purchases} />
               )
-            ) : activeTab === 'calculator' ? (
+            ) : activeTab === "calculator" ? (
               <RecipeCalculator />
             ) : null}
           </div>
@@ -132,7 +145,10 @@ function App() {
 
       {/* New Order Modal */}
       {showNewOrderForm && (
-        <div className="fixed inset-0 bg-gray-500 bg-opacity-75 flex items-center justify-center p-4" onClick={handleModalOutsideClick}>
+        <div
+          className="fixed inset-0 bg-gray-500 bg-opacity-75 flex items-center justify-center p-4"
+          onClick={handleModalOutsideClick}
+        >
           <div className="bg-white rounded-lg shadow-xl max-w-2xl w-full p-6 max-h-[90vh] overflow-y-auto">
             <div className="flex justify-between items-center mb-4">
               <h2 className="text-xl font-semibold text-gray-900">
@@ -148,14 +164,20 @@ function App() {
                 <X className="w-6 h-6" />
               </button>
             </div>
-            <OrderForm onSubmit={handleCreateOrder} onCancel={() => setShowNewOrderForm(false)} />
+            <OrderForm
+              onSubmit={handleCreateOrder}
+              onCancel={() => setShowNewOrderForm(false)}
+            />
           </div>
         </div>
       )}
 
       {/* Edit Order Modal */}
       {editingOrder && (
-        <div className="fixed inset-0 bg-gray-500 bg-opacity-75 flex items-center justify-center p-4" onClick={handleModalOutsideClick}>
+        <div
+          className="fixed inset-0 bg-gray-500 bg-opacity-75 flex items-center justify-center p-4"
+          onClick={handleModalOutsideClick}
+        >
           <div className="bg-white rounded-lg shadow-xl max-w-2xl w-full p-6 max-h-[90vh] overflow-y-auto">
             <div className="flex justify-between items-center mb-4">
               <h2 className="text-xl font-semibold text-gray-900">
@@ -182,7 +204,10 @@ function App() {
 
       {/* Order Details Modal */}
       {selectedOrder && (
-        <div className="fixed inset-0 bg-gray-500 bg-opacity-75 flex items-center justify-center p-4" onClick={handleModalOutsideClick}>
+        <div
+          className="fixed inset-0 bg-gray-500 bg-opacity-75 flex items-center justify-center p-4"
+          onClick={handleModalOutsideClick}
+        >
           <div className="bg-white rounded-lg shadow-xl max-w-2xl w-full p-6 max-h-[90vh] overflow-y-auto">
             <div className="flex justify-between items-center mb-4">
               <h2 className="text-xl font-semibold text-gray-900">
@@ -209,9 +234,14 @@ function App() {
               </div>
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <p className="text-sm font-medium text-gray-500">Total Servings</p>
+                  <p className="text-sm font-medium text-gray-500">
+                    Total Servings
+                  </p>
                   <p className="mt-1">
-                    {selectedOrder.items.reduce((total, item) => total + item.servings, 0)}
+                    {selectedOrder.items.reduce(
+                      (total, item) => total + item.servings,
+                      0
+                    )}
                   </p>
                 </div>
                 <div>
@@ -224,7 +254,9 @@ function App() {
                 </div>
               </div>
               <div>
-                <h4 className="text-sm font-medium text-gray-500 mb-2">Costs</h4>
+                <h4 className="text-sm font-medium text-gray-500 mb-2">
+                  Costs
+                </h4>
                 <div className="bg-gray-50 rounded-lg p-4 space-y-2">
                   {Object.entries(selectedOrder.costs).map(([key, value]) => (
                     <div key={key} className="flex justify-between">
@@ -244,10 +276,15 @@ function App() {
                 </div>
               </div>
               <div>
-                <h4 className="text-sm font-medium text-gray-500 mb-2">Paellas</h4>
+                <h4 className="text-sm font-medium text-gray-500 mb-2">
+                  Paellas
+                </h4>
                 <div className="bg-gray-50 rounded-lg p-4 space-y-2">
                   {selectedOrder.items.map((item, index) => (
-                    <div key={index} className="flex justify-between items-center">
+                    <div
+                      key={index}
+                      className="flex justify-between items-center"
+                    >
                       <span className="flex items-center space-x-2">
                         <span className="font-medium">{item.type}</span>
                         <span className="text-gray-500">·</span>
@@ -282,7 +319,10 @@ function App() {
 
       {/* Ingredient Purchase Modal */}
       {showIngredientPurchaseForm && (
-        <div className="fixed inset-0 bg-gray-500 bg-opacity-75 flex items-center justify-center p-4" onClick={handleModalOutsideClick}>
+        <div
+          className="fixed inset-0 bg-gray-500 bg-opacity-75 flex items-center justify-center p-4"
+          onClick={handleModalOutsideClick}
+        >
           <div className="bg-white rounded-lg shadow-xl max-w-2xl w-full p-6 max-h-[90vh] overflow-y-auto">
             <div className="flex justify-between items-center mb-4">
               <h2 className="text-xl font-semibold text-gray-900">
@@ -302,7 +342,8 @@ function App() {
               onSubmit={(purchaseData) => {
                 createIngredientPurchase.mutate(purchaseData, {
                   onSuccess: () => setShowIngredientPurchaseForm(false),
-                  onError: (error) => console.error('Error creating purchase:', error),
+                  onError: (error) =>
+                    console.error("Error creating purchase:", error),
                 });
               }}
               onCancel={() => setShowIngredientPurchaseForm(false)}
@@ -314,4 +355,12 @@ function App() {
   );
 }
 
-export default App;
+export default function App() {
+  return (
+    <QueryClientProvider client={queryClient}>
+      <React.Suspense fallback={<div>Loading...</div>}>
+        <AppContent />
+      </React.Suspense>
+    </QueryClientProvider>
+  );
+}
