@@ -232,6 +232,9 @@ export function useCreateIngredientPurchase() {
 
   return useMutation({
     mutationFn: async (data: Omit<IngredientPurchase, 'id'>) => {
+      const { data: userData, error: userError } = await supabase.auth.getUser();
+      if (userError) throw userError;
+
       const { error } = await supabase.from('ingredient_purchases').insert({
         ingredient_id: data.ingredientId,
         order_id: data.orderId || null,
@@ -241,6 +244,7 @@ export function useCreateIngredientPurchase() {
         supplier: data.supplier,
         purchase_date: data.purchaseDate,
         notes: data.notes || null,
+        user_id: userData.user.id,
       });
 
       if (error) throw error;
