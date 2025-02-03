@@ -41,7 +41,27 @@ export interface IngredientPurchase {
   quantity: number;
   price: number;
   unit_price: number;
+  isUnitPrice: boolean;
   supplier: string;
   purchaseDate: string;
   notes?: string;
+}
+
+export interface Recipe {
+  id: string;
+  name: string;
+  description?: string;
+  cookingTimeMinutes?: number;
+  baseServings: number;
+  ingredients: RecipeIngredient[];
+  createdAt: string;
+}
+
+export interface RecipeIngredient {
+  id: string;
+  recipeId: string;
+  ingredientId: string;
+  ingredient: Ingredient;
+  quantity: number;
+  createdAt: string;
 }

@@ -1,23 +1,27 @@
-import React from 'react';
-import { PaellaOrder, PaellaItem } from '../types/order';
-import { PlusCircle, Trash2 } from 'lucide-react';
-import { calculateAllIngredients, formatAmount } from '../lib/proportions/calculator';
-import { Input } from './ui/Input';
-import { Select } from './ui/Select';
+import React from "react";
+import { PaellaOrder, PaellaItem } from "../types/order";
+import { PlusCircle, Trash2 } from "lucide-react";
+import {
+  calculateAllIngredients,
+  formatAmount,
+} from "../lib/proportions/calculator";
+import { Input } from "./ui/Input";
+import { Select } from "./ui/Select";
 
 interface OrderFormProps {
   initialData?: PaellaOrder;
-  onSubmit: (order: Omit<PaellaOrder, 'id'>) => void;
+  onSubmit: (order: Omit<PaellaOrder, "id">) => void;
   onCancel: () => void;
 }
 
 export function OrderForm({ initialData, onSubmit, onCancel }: OrderFormProps) {
   const [formData, setFormData] = React.useState({
-    customerName: initialData?.customerName || '',
-    date: initialData?.date || new Date().toISOString().split('T')[0],
+    customerName: initialData?.customerName || "",
+    date: initialData?.date || new Date().toISOString().split("T")[0],
     items: initialData?.items || [
       {
-        type: 'Valenciana' as PaellaItem['type'],
+        id: crypto.randomUUID(),
+        type: "Valenciana" as PaellaItem["type"],
         servings: 10,
       },
     ],
@@ -28,8 +32,8 @@ export function OrderForm({ initialData, onSubmit, onCancel }: OrderFormProps) {
       transport: 0,
       other: 0,
     },
-    notes: initialData?.notes || '',
-    status: initialData?.status || 'pending' as PaellaOrder['status'],
+    notes: initialData?.notes || "",
+    status: initialData?.status || ("pending" as PaellaOrder["status"]),
   });
 
   const handleSubmit = (e: React.FormEvent) => {
@@ -38,12 +42,13 @@ export function OrderForm({ initialData, onSubmit, onCancel }: OrderFormProps) {
   };
 
   const addPaella = () => {
-    setFormData(prev => ({
+    setFormData((prev) => ({
       ...prev,
       items: [
         ...prev.items,
         {
-          type: 'Valenciana',
+          id: crypto.randomUUID(),
+          type: "Valenciana",
           servings: 10,
         },
       ],
@@ -51,14 +56,18 @@ export function OrderForm({ initialData, onSubmit, onCancel }: OrderFormProps) {
   };
 
   const removePaella = (index: number) => {
-    setFormData(prev => ({
+    setFormData((prev) => ({
       ...prev,
       items: prev.items.filter((_, i) => i !== index),
     }));
   };
 
-  const updatePaella = (index: number, field: keyof PaellaItem, value: any) => {
-    setFormData(prev => ({
+  const updatePaella = (
+    index: number,
+    field: keyof PaellaItem,
+    value: PaellaItem[keyof PaellaItem]
+  ) => {
+    setFormData((prev) => ({
       ...prev,
       items: prev.items.map((item, i) =>
         i === index ? { ...item, [field]: value } : item
@@ -66,7 +75,7 @@ export function OrderForm({ initialData, onSubmit, onCancel }: OrderFormProps) {
     }));
   };
 
-  const currentIngredients = formData.items.map(item => {
+  const currentIngredients = formData.items.map((item) => {
     const ingredients = calculateAllIngredients(item.type, item.servings);
     return { type: item.type, ingredients };
   });
@@ -129,7 +138,11 @@ export function OrderForm({ initialData, onSubmit, onCancel }: OrderFormProps) {
                       label="Type"
                       value={item.type}
                       onChange={(e) =>
-                        updatePaella(index, 'type', e.target.value as PaellaItem['type'])
+                        updatePaella(
+                          index,
+                          "type",
+                          e.target.value as PaellaItem["type"]
+                        )
                       }
                     >
                       <option value="Valenciana">Valenciana</option>
@@ -146,22 +159,28 @@ export function OrderForm({ initialData, onSubmit, onCancel }: OrderFormProps) {
                       required
                       value={item.servings}
                       onChange={(e) =>
-                        updatePaella(index, 'servings', Number(e.target.value))
+                        updatePaella(index, "servings", Number(e.target.value))
                       }
                     />
                   </div>
                 </div>
               </div>
               <div>
-                <h4 className="text-sm font-medium text-gray-500 mb-2">Required Ingredients</h4>
+                <h4 className="text-sm font-medium text-gray-500 mb-2">
+                  Required Ingredients
+                </h4>
                 <div className="bg-gray-50 rounded-lg p-4">
                   <div className="grid grid-cols-2 gap-2 text-sm">
-                    {Object.entries(currentIngredients[index].ingredients).map(([ingredient, proportion]) => (
-                      <div key={ingredient} className="flex justify-between">
-                        <span className="capitalize">{ingredient}:</span>
-                        <span className="font-medium">{formatAmount(proportion)}</span>
-                      </div>
-                    ))}
+                    {Object.entries(currentIngredients[index].ingredients).map(
+                      ([ingredient, proportion]) => (
+                        <div key={ingredient} className="flex justify-between">
+                          <span className="capitalize">{ingredient}:</span>
+                          <span className="font-medium">
+                            {formatAmount(proportion)}
+                          </span>
+                        </div>
+                      )
+                    )}
                   </div>
                 </div>
               </div>
@@ -237,7 +256,7 @@ export function OrderForm({ initialData, onSubmit, onCancel }: OrderFormProps) {
           type="submit"
           className="px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
         >
-          {initialData ? 'Update Order' : 'Create Order'}
+          {initialData ? "Update Order" : "Create Order"}
         </button>
       </div>
     </form>

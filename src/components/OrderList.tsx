@@ -1,4 +1,3 @@
-import React from "react";
 import { PaellaOrder } from "../types/order";
 import { ChevronRight, Circle } from "lucide-react";
 

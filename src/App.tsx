@@ -16,6 +16,7 @@ import { IngredientPurchaseList } from "./components/IngredientPurchaseList";
 import { Sidebar } from "./components/Sidebar";
 import { RecipeCalculator } from "./components/RecipeCalculator";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+import { OrderDetail } from "./components/OrderDetail";
 
 const queryClient = new QueryClient();
 
@@ -30,9 +31,7 @@ function AppContent() {
   const [selectedOrder, setSelectedOrder] = React.useState<PaellaOrder | null>(
     null
   );
-  const [editingOrder, setEditingOrder] = React.useState<PaellaOrder | null>(
-    null
-  );
+  const [isEditing, setIsEditing] = React.useState(false);
   const [showIngredientPurchaseForm, setShowIngredientPurchaseForm] =
     React.useState(false);
   const [activeTab, setActiveTab] = React.useState<
@@ -43,7 +42,7 @@ function AppContent() {
     if (e.target === e.currentTarget) {
       setShowNewOrderForm(false);
       setSelectedOrder(null);
-      setEditingOrder(null);
+      setIsEditing(false);
     }
   };
 
@@ -82,12 +81,15 @@ function AppContent() {
   };
 
   const handleUpdateOrder = (orderData: Omit<PaellaOrder, "id">) => {
-    if (!editingOrder) return;
+    if (!selectedOrder) return;
 
     updateOrder.mutate(
-      { id: editingOrder.id, orderData },
+      { id: selectedOrder.id, orderData },
       {
-        onSuccess: () => setEditingOrder(null),
+        onSuccess: () => {
+          setSelectedOrder(null);
+          setIsEditing(false);
+        },
         onError: (error) => console.error("Error updating order:", error),
       }
     );
@@ -172,85 +174,22 @@ function AppContent() {
         </div>
       )}
 
-      {/* Edit Order Modal */}
-      {editingOrder && (
-        <div
-          className="fixed inset-0 bg-gray-500 bg-opacity-75 flex items-center justify-center p-4 z-50"
-          onClick={handleModalOutsideClick}
-        >
-          <div className="bg-white rounded-lg shadow-xl w-full max-w-2xl p-4 sm:p-6 max-h-[90vh] overflow-y-auto m-4">
-            <div className="flex justify-between items-center mb-4">
-              <h2 className="text-xl font-semibold text-gray-900">
-                Edit Order
-              </h2>
-              <button
-                onClick={(e) => {
-                  e.stopPropagation();
-                  setEditingOrder(null);
-                }}
-                className="text-gray-400 hover:text-gray-500"
-              >
-                <X className="w-6 h-6" />
-              </button>
-            </div>
-            <OrderForm
-              initialData={editingOrder}
-              onSubmit={handleUpdateOrder}
-              onCancel={() => setEditingOrder(null)}
-            />
-          </div>
-        </div>
-      )}
-
-      {/* Order Details Modal */}
+      {/* Order Details/Edit Modal */}
       {selectedOrder && (
         <div
           className="fixed inset-0 bg-gray-500 bg-opacity-75 flex items-center justify-center p-4 z-50"
           onClick={handleModalOutsideClick}
         >
-          <div className="bg-white rounded-lg shadow-xl w-full max-w-2xl p-4 sm:p-6 max-h-[90vh] overflow-y-auto m-4">
-            <div className="flex justify-between items-center mb-4">
-              <h2 className="text-xl font-semibold text-gray-900">
-                Order Details
-              </h2>
-              <button
-                onClick={(e) => {
-                  e.stopPropagation();
-                  setSelectedOrder(null);
-                }}
-                className="text-gray-400 hover:text-gray-500"
-              >
-                <X className="w-6 h-6" />
-              </button>
-            </div>
-            <div className="space-y-4">
-              <div>
-                <h3 className="text-lg font-medium text-gray-900">
-                  {selectedOrder.customerName}
-                </h3>
-                <p className="text-sm text-gray-500">
-                  {new Date(selectedOrder.date).toLocaleDateString()}
-                </p>
-              </div>
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                <div>
-                  <p className="text-sm font-medium text-gray-500">
-                    Total Servings
-                  </p>
-                  <p className="mt-1">
-                    {selectedOrder.items.reduce(
-                      (total, item) => total + item.servings,
-                      0
-                    )}
-                  </p>
-                </div>
-                <div>
-                  <p className="text-sm font-medium text-gray-500">Status</p>
-                  <p className="mt-1 capitalize">{selectedOrder.status}</p>
-                </div>
-              </div>
-            </div>
-          </div>
+          <OrderDetail
+            order={selectedOrder}
+            isEditing={isEditing}
+            onClose={() => {
+              setSelectedOrder(null);
+              setIsEditing(false);
+            }}
+            onEdit={() => setIsEditing(true)}
+            onUpdate={handleUpdateOrder}
+          />
         </div>
       )}
 

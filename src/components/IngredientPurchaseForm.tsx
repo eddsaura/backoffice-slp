@@ -1,7 +1,7 @@
 import React from "react";
-import { Ingredient, IngredientPurchase } from "../types/order";
+import { IngredientPurchase } from "../types/order";
 import { useIngredients, useCreateIngredient } from "../lib/api";
-import { PlusCircle, Euro } from "lucide-react";
+import { PlusCircle } from "lucide-react";
 import { Input } from "./ui/Input";
 import { Select } from "./ui/Select";
 

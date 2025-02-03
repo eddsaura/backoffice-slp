@@ -25,16 +25,21 @@ export function useOrders() {
   return useQuery({
     queryKey: ['orders'],
     queryFn: async () => {
+      const { data: userData, error: userError } = await supabase.auth.getUser();
+      if (userError) throw userError;
+
       const { data: orders, error: ordersError } = await supabase
         .from('paella_orders')
         .select('*')
+        .eq('user_id', userData.user.id)
         .order('date', { ascending: false });
 
       if (ordersError) throw ordersError;
 
       const { data: items, error: itemsError } = await supabase
         .from('paella_items')
-        .select('*');
+        .select('*')
+        .in('order_id', orders.map(order => order.id));
 
       if (itemsError) throw itemsError;
 
@@ -115,26 +120,63 @@ export function useUpdateOrder() {
 
       if (orderError) throw orderError;
 
-      // Delete existing items
-      const { error: deleteError } = await supabase
+      // Get existing items
+      const { data: existingItems, error: getItemsError } = await supabase
         .from('paella_items')
-        .delete()
+        .select('*')
         .eq('order_id', id);
 
-      if (deleteError) throw deleteError;
+      if (getItemsError) throw getItemsError;
+
+      // Find items to delete (items that exist in DB but not in orderData)
+      const itemsToDelete = existingItems.filter(
+        existingItem => !orderData.items.some(item => item.id === existingItem.id)
+      );
+
+      // Find items to update (items that exist in both DB and orderData)
+      const itemsToUpdate = orderData.items.filter(item => item.id).map(item => ({
+        id: item.id,
+        order_id: id,
+        type: item.type,
+        servings: item.servings,
+      }));
+
+      // Find items to insert (items that don't have an id)
+      const itemsToInsert = orderData.items
+        .filter(item => !item.id)
+        .map(item => ({
+          order_id: id,
+          type: item.type,
+          servings: item.servings,
+        }));
+
+      // Delete removed items
+      if (itemsToDelete.length > 0) {
+        const { error: deleteError } = await supabase
+          .from('paella_items')
+          .delete()
+          .in('id', itemsToDelete.map(item => item.id));
+
+        if (deleteError) throw deleteError;
+      }
+
+      // Update existing items
+      if (itemsToUpdate.length > 0) {
+        const { error: updateError } = await supabase
+          .from('paella_items')
+          .upsert(itemsToUpdate);
+
+        if (updateError) throw updateError;
+      }
 
       // Insert new items
-      const { error: itemsError } = await supabase
-        .from('paella_items')
-        .insert(
-          orderData.items.map(item => ({
-            order_id: id,
-            type: item.type,
-            servings: item.servings,
-          }))
-        );
+      if (itemsToInsert.length > 0) {
+        const { error: insertError } = await supabase
+          .from('paella_items')
+          .insert(itemsToInsert);
 
-      if (itemsError) throw itemsError;
+        if (insertError) throw insertError;
+      }
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['orders'] });
@@ -214,6 +256,7 @@ export function useIngredientPurchases(orderId?: string) {
         quantity: purchase.quantity,
         price: purchase.price,
         unit_price: purchase.unit_price,
+        isUnitPrice: false,
         supplier: purchase.supplier,
         purchaseDate: purchase.purchase_date,
         notes: purchase.notes || undefined,
