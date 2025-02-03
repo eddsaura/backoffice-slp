@@ -98,24 +98,24 @@ function AppContent() {
       <div className="flex h-screen overflow-hidden">
         <Sidebar activeTab={activeTab} onTabChange={setActiveTab} />
         <div className="flex-1 overflow-auto">
-          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-            <div className="flex justify-end mb-6">
-              <div className="flex space-x-4">
-                <button
-                  onClick={() => setShowIngredientPurchaseForm(true)}
-                  className="inline-flex items-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-green-600 hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500"
-                >
-                  <Package className="w-5 h-5 mr-2" />
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 pt-20 lg:pt-8">
+            <div className="flex flex-col sm:flex-row sm:justify-end mb-6 space-y-4 sm:space-y-0 sm:space-x-4">
+              <button
+                onClick={() => setShowIngredientPurchaseForm(true)}
+                className="inline-flex items-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-green-600 hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500"
+              >
+                <Package className="w-5 h-5 mr-2" />
+                <span className="whitespace-nowrap">
                   Add Ingredient Purchase
-                </button>
-                <button
-                  onClick={() => setShowNewOrderForm(true)}
-                  className="inline-flex items-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
-                >
-                  <PlusCircle className="w-5 h-5 mr-2" />
-                  Create New Order
-                </button>
-              </div>
+                </span>
+              </button>
+              <button
+                onClick={() => setShowNewOrderForm(true)}
+                className="inline-flex items-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+              >
+                <PlusCircle className="w-5 h-5 mr-2" />
+                <span className="whitespace-nowrap">Create New Order</span>
+              </button>
             </div>
 
             {activeTab !== "calculator" && <Summary summary={summary} />}
@@ -146,10 +146,10 @@ function AppContent() {
       {/* New Order Modal */}
       {showNewOrderForm && (
         <div
-          className="fixed inset-0 bg-gray-500 bg-opacity-75 flex items-center justify-center p-4"
+          className="fixed inset-0 bg-gray-500 bg-opacity-75 flex items-center justify-center p-4 z-50"
           onClick={handleModalOutsideClick}
         >
-          <div className="bg-white rounded-lg shadow-xl max-w-2xl w-full p-6 max-h-[90vh] overflow-y-auto">
+          <div className="bg-white rounded-lg shadow-xl w-full max-w-2xl p-4 sm:p-6 max-h-[90vh] overflow-y-auto m-4">
             <div className="flex justify-between items-center mb-4">
               <h2 className="text-xl font-semibold text-gray-900">
                 Create New Order
@@ -175,10 +175,10 @@ function AppContent() {
       {/* Edit Order Modal */}
       {editingOrder && (
         <div
-          className="fixed inset-0 bg-gray-500 bg-opacity-75 flex items-center justify-center p-4"
+          className="fixed inset-0 bg-gray-500 bg-opacity-75 flex items-center justify-center p-4 z-50"
           onClick={handleModalOutsideClick}
         >
-          <div className="bg-white rounded-lg shadow-xl max-w-2xl w-full p-6 max-h-[90vh] overflow-y-auto">
+          <div className="bg-white rounded-lg shadow-xl w-full max-w-2xl p-4 sm:p-6 max-h-[90vh] overflow-y-auto m-4">
             <div className="flex justify-between items-center mb-4">
               <h2 className="text-xl font-semibold text-gray-900">
                 Edit Order
@@ -205,10 +205,10 @@ function AppContent() {
       {/* Order Details Modal */}
       {selectedOrder && (
         <div
-          className="fixed inset-0 bg-gray-500 bg-opacity-75 flex items-center justify-center p-4"
+          className="fixed inset-0 bg-gray-500 bg-opacity-75 flex items-center justify-center p-4 z-50"
           onClick={handleModalOutsideClick}
         >
-          <div className="bg-white rounded-lg shadow-xl max-w-2xl w-full p-6 max-h-[90vh] overflow-y-auto">
+          <div className="bg-white rounded-lg shadow-xl w-full max-w-2xl p-4 sm:p-6 max-h-[90vh] overflow-y-auto m-4">
             <div className="flex justify-between items-center mb-4">
               <h2 className="text-xl font-semibold text-gray-900">
                 Order Details
@@ -232,7 +232,7 @@ function AppContent() {
                   {new Date(selectedOrder.date).toLocaleDateString()}
                 </p>
               </div>
-              <div className="grid grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div>
                   <p className="text-sm font-medium text-gray-500">
                     Total Servings
@@ -248,69 +248,6 @@ function AppContent() {
                   <p className="text-sm font-medium text-gray-500">Status</p>
                   <p className="mt-1 capitalize">{selectedOrder.status}</p>
                 </div>
-                <div>
-                  <p className="text-sm font-medium text-gray-500">Price</p>
-                  <p className="mt-1">€{selectedOrder.price.toFixed(2)}</p>
-                </div>
-              </div>
-              <div>
-                <h4 className="text-sm font-medium text-gray-500 mb-2">
-                  Costs
-                </h4>
-                <div className="bg-gray-50 rounded-lg p-4 space-y-2">
-                  {Object.entries(selectedOrder.costs).map(([key, value]) => (
-                    <div key={key} className="flex justify-between">
-                      <span className="capitalize">{key}</span>
-                      <span>€{value.toFixed(2)}</span>
-                    </div>
-                  ))}
-                  <div className="border-t pt-2 flex justify-between font-medium">
-                    <span>Total Costs</span>
-                    <span>
-                      €
-                      {Object.values(selectedOrder.costs)
-                        .reduce((a, b) => a + b, 0)
-                        .toFixed(2)}
-                    </span>
-                  </div>
-                </div>
-              </div>
-              <div>
-                <h4 className="text-sm font-medium text-gray-500 mb-2">
-                  Paellas
-                </h4>
-                <div className="bg-gray-50 rounded-lg p-4 space-y-2">
-                  {selectedOrder.items.map((item, index) => (
-                    <div
-                      key={index}
-                      className="flex justify-between items-center"
-                    >
-                      <span className="flex items-center space-x-2">
-                        <span className="font-medium">{item.type}</span>
-                        <span className="text-gray-500">·</span>
-                        <span>{item.servings} servings</span>
-                      </span>
-                    </div>
-                  ))}
-                </div>
-              </div>
-              {selectedOrder.notes && (
-                <div>
-                  <p className="text-sm font-medium text-gray-500">Notes</p>
-                  <p className="mt-1">{selectedOrder.notes}</p>
-                </div>
-              )}
-              <div className="mt-6 flex justify-end">
-                <button
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    setEditingOrder(selectedOrder);
-                    setSelectedOrder(null);
-                  }}
-                  className="inline-flex items-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
-                >
-                  Edit Order
-                </button>
               </div>
             </div>
           </div>
