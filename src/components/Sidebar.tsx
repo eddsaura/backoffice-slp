@@ -5,9 +5,10 @@ import {
   ShoppingCart,
   Menu,
   X,
+  BookOpen,
 } from "lucide-react";
 
-type TabType = "orders" | "ingredients" | "calculator";
+export type TabType = "orders" | "ingredients" | "recipes" | "calculator";
 
 interface SidebarProps {
   activeTab: TabType;
@@ -27,6 +28,11 @@ export function Sidebar({ activeTab, onTabChange }: SidebarProps) {
       id: "ingredients",
       label: "Ingredients",
       icon: ShoppingCart,
+    },
+    {
+      id: "recipes",
+      label: "Recipes",
+      icon: BookOpen,
     },
     {
       id: "calculator",

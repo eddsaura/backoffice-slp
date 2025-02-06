@@ -10,13 +10,14 @@ import {
   useUpdateOrder,
   useCreateIngredientPurchase,
   useIngredientPurchases,
+  useRecipes,
 } from "./lib/api";
 import { IngredientPurchaseForm } from "./components/IngredientPurchaseForm";
 import { IngredientPurchaseList } from "./components/IngredientPurchaseList";
-import { Sidebar } from "./components/Sidebar";
-import { RecipeCalculator } from "./components/RecipeCalculator";
+import { Sidebar, TabType } from "./components/Sidebar";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { OrderDetail } from "./components/OrderDetail";
+import { RecipeView } from "./components/RecipeView";
 
 const queryClient = new QueryClient();
 
@@ -34,9 +35,8 @@ function AppContent() {
   const [isEditing, setIsEditing] = React.useState(false);
   const [showIngredientPurchaseForm, setShowIngredientPurchaseForm] =
     React.useState(false);
-  const [activeTab, setActiveTab] = React.useState<
-    "orders" | "ingredients" | "calculator"
-  >("orders");
+  const [activeTab, setActiveTab] = React.useState<TabType>("orders");
+  const { data: recipes } = useRecipes();
 
   const handleModalOutsideClick = (e: React.MouseEvent) => {
     if (e.target === e.currentTarget) {
@@ -138,8 +138,8 @@ function AppContent() {
               ) : (
                 <IngredientPurchaseList purchases={purchases} />
               )
-            ) : activeTab === "calculator" ? (
-              <RecipeCalculator />
+            ) : activeTab === "recipes" ? (
+              <RecipeView recipes={recipes || []} isLoading={!recipes} />
             ) : null}
           </div>
         </div>

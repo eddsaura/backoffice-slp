@@ -8,7 +8,9 @@
     - Allow users to update and delete items for their own orders
 */
 
--- Create update policy
+DROP POLICY IF EXISTS "Users can update own order items" ON paella_items;
+DROP POLICY IF EXISTS "Users can delete own order items" ON paella_items;
+
 CREATE POLICY "Users can update own order items"
   ON paella_items
   FOR UPDATE
@@ -28,7 +30,6 @@ CREATE POLICY "Users can update own order items"
     )
   );
 
--- Create delete policy
 CREATE POLICY "Users can delete own order items"
   ON paella_items
   FOR DELETE
