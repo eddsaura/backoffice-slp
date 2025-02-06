@@ -5,17 +5,41 @@ import { Button } from "./ui/Button";
 import { PlusIcon, TrashIcon } from "@heroicons/react/24/outline";
 import { Select } from "./ui/Select";
 import { supabase } from "../lib/supabase";
+import { useCreateRecipe, useUpdateRecipe } from "../lib/api";
 
-export function CustomRecipeBuilder() {
-  const [recipe, setRecipe] = useState<Partial<Recipe>>({
-    name: "",
-    baseServings: 1,
-    ingredients: [],
+interface CustomRecipeBuilderProps {
+  onSuccess?: () => void;
+  initialRecipe?: Recipe | null;
+}
+
+export function CustomRecipeBuilder({
+  onSuccess,
+  initialRecipe,
+}: CustomRecipeBuilderProps) {
+  const [recipe, setRecipe] = useState<Partial<Recipe>>(() => {
+    if (initialRecipe) {
+      return {
+        ...initialRecipe,
+        ingredients: initialRecipe.ingredients.map((ing) => ({
+          ...ing,
+          // Generate new IDs for ingredients to avoid conflicts
+          id: crypto.randomUUID(),
+        })),
+      };
+    }
+    return {
+      name: "",
+      baseServings: 1,
+      ingredients: [],
+    };
   });
 
   const [ingredients, setIngredients] = useState<Ingredient[]>([]);
   const [selectedIngredient, setSelectedIngredient] = useState<string>("");
   const [quantity, setQuantity] = useState<string>("");
+
+  const createRecipe = useCreateRecipe();
+  const updateRecipe = useUpdateRecipe();
 
   useEffect(() => {
     async function loadIngredients() {
@@ -42,7 +66,7 @@ export function CustomRecipeBuilder() {
 
     const newIngredient: RecipeIngredient = {
       id: crypto.randomUUID(),
-      recipeId: "",
+      recipeId: initialRecipe?.id || "",
       ingredientId: selectedIngredient,
       ingredient,
       quantity: Number(quantity),
@@ -73,43 +97,47 @@ export function CustomRecipeBuilder() {
     }
 
     try {
-      // Insert recipe
-      const { data: recipeData, error: recipeError } = await supabase
-        .from("recipes")
-        .insert({
-          name: recipe.name,
-          description: recipe.description,
-          cooking_time_minutes: recipe.cookingTimeMinutes,
-          base_servings: recipe.baseServings,
-        })
-        .select()
-        .single();
-
-      if (recipeError) throw recipeError;
-
-      // Insert recipe ingredients
-      const { error: ingredientsError } = await supabase
-        .from("recipe_ingredients")
-        .insert(
-          recipe.ingredients.map((ing) => ({
-            recipe_id: recipeData.id,
-            ingredient_id: ing.ingredientId,
-            quantity: ing.quantity,
-          }))
+      if (initialRecipe) {
+        await updateRecipe.mutateAsync(
+          { id: initialRecipe.id, recipe },
+          {
+            onSuccess: () => {
+              setRecipe({
+                name: "",
+                baseServings: 1,
+                ingredients: [],
+              });
+              setSelectedIngredient("");
+              setQuantity("");
+              onSuccess?.();
+            },
+            onError: (error) => {
+              console.error("Error updating recipe:", error);
+              alert("Error updating recipe. Please try again.");
+            },
+          }
         );
-
-      if (ingredientsError) throw ingredientsError;
-
-      // Reset form
-      setRecipe({
-        name: "",
-        baseServings: 1,
-        ingredients: [],
-      });
-      setSelectedIngredient("");
-      setQuantity("");
-
-      alert("Recipe saved successfully!");
+      } else {
+        await createRecipe.mutateAsync(
+          { recipe },
+          {
+            onSuccess: () => {
+              setRecipe({
+                name: "",
+                baseServings: 1,
+                ingredients: [],
+              });
+              setSelectedIngredient("");
+              setQuantity("");
+              onSuccess?.();
+            },
+            onError: (error) => {
+              console.error("Error saving recipe:", error);
+              alert("Error saving recipe. Please try again.");
+            },
+          }
+        );
+      }
     } catch (error) {
       console.error("Error saving recipe:", error);
       alert("Error saving recipe. Please try again.");

@@ -1,6 +1,6 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { supabase } from './supabase';
-import { PaellaOrder, Ingredient, IngredientPurchase } from '../types/order';
+import { PaellaOrder, Ingredient, IngredientPurchase, Recipe, RecipeIngredient } from '../types/order';
 import { Database } from '../types/supabase';
 
 type SupabaseOrder = Database['public']['Tables']['paella_orders']['Row'];
@@ -294,6 +294,170 @@ export function useCreateIngredientPurchase() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['ingredient-purchases'] });
+    },
+  });
+}
+
+export function useCreateRecipe() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async (data: { recipe: Partial<Recipe> }) => {
+      const { data: userData, error: userError } = await supabase.auth.getUser();
+      if (userError) throw userError;
+
+      // Insert recipe
+      const { data: recipeData, error: recipeError } = await supabase
+        .from("recipes")
+        .insert({
+          name: data.recipe.name,
+          description: data.recipe.description,
+          cooking_time_minutes: data.recipe.cookingTimeMinutes,
+          base_servings: data.recipe.baseServings,
+          user_id: userData.user.id,
+        })
+        .select()
+        .single();
+
+      if (recipeError) throw recipeError;
+
+      // Insert recipe ingredients
+      if (data.recipe.ingredients?.length) {
+        const { error: ingredientsError } = await supabase
+          .from("recipe_ingredients")
+          .insert(
+            data.recipe.ingredients.map((ing: RecipeIngredient) => ({
+              recipe_id: recipeData.id,
+              ingredient_id: ing.ingredientId,
+              quantity: ing.quantity,
+            }))
+          );
+
+        if (ingredientsError) throw ingredientsError;
+      }
+
+      return recipeData;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['recipes'] });
+    },
+  });
+}
+
+export function useRecipes() {
+  return useQuery({
+    queryKey: ['recipes'],
+    queryFn: async () => {
+      const { data: recipes, error: recipesError } = await supabase
+        .from('recipes')
+        .select(`
+          *,
+          recipe_ingredients (
+            *,
+            ingredients (*)
+          )
+        `)
+        .order('created_at', { ascending: false });
+
+      if (recipesError) throw recipesError;
+
+      return recipes.map((recipe): Recipe => ({
+        id: recipe.id,
+        name: recipe.name,
+        description: recipe.description || undefined,
+        cookingTimeMinutes: recipe.cooking_time_minutes || undefined,
+        baseServings: recipe.base_servings,
+        createdAt: recipe.created_at,
+        ingredients: recipe.recipe_ingredients.map((ri): RecipeIngredient => ({
+          id: ri.id,
+          recipeId: ri.recipe_id,
+          ingredientId: ri.ingredient_id,
+          quantity: ri.quantity,
+          createdAt: ri.created_at,
+          ingredient: {
+            id: ri.ingredients.id,
+            name: ri.ingredients.name,
+            unit: ri.ingredients.unit,
+          },
+        })),
+      }));
+    },
+  });
+}
+
+export function useUpdateRecipe() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async (data: { id: string; recipe: Partial<Recipe> }) => {
+      const { data: userData, error: userError } = await supabase.auth.getUser();
+      if (userError) throw userError;
+
+      // Update recipe details
+      const { error: recipeError } = await supabase
+        .from("recipes")
+        .update({
+          name: data.recipe.name,
+          description: data.recipe.description,
+          cooking_time_minutes: data.recipe.cookingTimeMinutes,
+          base_servings: data.recipe.baseServings,
+        })
+        .eq('id', data.id)
+        .eq('user_id', userData.user.id);
+
+      if (recipeError) throw recipeError;
+
+      // Get existing ingredients
+      const { data: existingIngredients, error: getIngredientsError } = await supabase
+        .from('recipe_ingredients')
+        .select('*')
+        .eq('recipe_id', data.id);
+
+      if (getIngredientsError) throw getIngredientsError;
+
+      // Find ingredients to delete
+      const ingredientsToDelete = existingIngredients.filter(
+        existingIng => !data.recipe.ingredients?.some(ing => 
+          ing.ingredientId === existingIng.ingredient_id && 
+          ing.quantity === existingIng.quantity
+        )
+      );
+
+      // Find ingredients to insert (new ones)
+      const ingredientsToInsert = data.recipe.ingredients?.filter(ing => 
+        !existingIngredients.some(existingIng => 
+          ing.ingredientId === existingIng.ingredient_id && 
+          ing.quantity === existingIng.quantity
+        )
+      );
+
+      // Delete removed ingredients
+      if (ingredientsToDelete.length > 0) {
+        const { error: deleteError } = await supabase
+          .from('recipe_ingredients')
+          .delete()
+          .in('id', ingredientsToDelete.map(ing => ing.id));
+
+        if (deleteError) throw deleteError;
+      }
+
+      // Insert new ingredients
+      if (ingredientsToInsert?.length) {
+        const { error: insertError } = await supabase
+          .from('recipe_ingredients')
+          .insert(
+            ingredientsToInsert.map(ing => ({
+              recipe_id: data.id,
+              ingredient_id: ing.ingredientId,
+              quantity: ing.quantity,
+            }))
+          );
+
+        if (insertError) throw insertError;
+      }
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['recipes'] });
     },
   });
 }
