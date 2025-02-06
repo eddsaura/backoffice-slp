@@ -18,6 +18,7 @@ import { Sidebar, TabType } from "./components/Sidebar";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { OrderDetail } from "./components/OrderDetail";
 import { RecipeView } from "./components/RecipeView";
+import { RecipeCalculator } from "./components/RecipeCalculator";
 
 const queryClient = new QueryClient();
 
@@ -140,6 +141,8 @@ function AppContent() {
               )
             ) : activeTab === "recipes" ? (
               <RecipeView recipes={recipes || []} isLoading={!recipes} />
+            ) : activeTab === "calculator" ? (
+              <RecipeCalculator recipes={recipes || []} />
             ) : null}
           </div>
         </div>

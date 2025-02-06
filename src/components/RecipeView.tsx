@@ -49,7 +49,7 @@ export function RecipeView({ recipes = [], isLoading }: RecipeViewProps) {
           </div>
         </div>
       )}
-      <div className="flex justify-end mb-6">
+      <div className="flex justify-end">
         {!showRecipeBuilder && !editingRecipe && (
           <button
             onClick={() => setShowRecipeBuilder(true)}
